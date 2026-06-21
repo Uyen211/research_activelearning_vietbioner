@@ -17,7 +17,7 @@ graph TD
     %% Phase 1: Khoi tao chung
     Raw_Data["Tập dữ liệu VietBioNER (Train/Val/Test)"] --> Step1["Bước 1: Tiền xử lý & Tách từ ghép (PyVi)"]
     Step1 --> Step2["Bước 2: Khởi tạo Mô hình & Định nghĩa 5 Mô tả Thực thể tĩnh"]
-    Step2 --> Step3["Bước 3: Phân chia Dataset & Khởi tạo Seed Set L_0 (K-Means + S-BERT, 5% Train)"]
+    Step2 --> Step3["Bước 3: Phân chia Dataset & Khởi tạo Seed Set L_0 (Stratified Sampling, 5% Train)"]
     
     %% Nhanh doi chung
     Step3 --> |"Nhân bản dữ liệu ban đầu"| Fork{"Phân nhánh thí nghiệm đối chứng"}
@@ -74,6 +74,9 @@ Quy trình tiền xử lý dữ liệu được thực hiện khép kín qua cá
         *   Giữ nguyên nhãn `B-Type` cho token từ ghép đầu tiên của thực thể.
         *   Tất cả các âm tiết tiếp theo được ghép vào từ đó sẽ tự động nhận nhãn `I-Type` tương ứng.
         *   Đảm bảo cấu trúc nhãn BIO luôn hợp lệ, không bị lỗi lệch pha ranh giới (alignment mismatch).
+*   **1.5. Tiền xử lý tĩnh cho các Gazetteer (Gazetteer Pre-segmentation)**:
+    *   *Mô tả thực hiện*: Toàn bộ 5 tệp Gazetteer tĩnh được nạp và áp dụng `ViTokenizer.tokenize` để phân tách từ ghép tiếng Việt trước khi bắt đầu các vòng lặp Active Learning. Kết quả được lưu thành các tệp `*_segmented.json` trong thư mục `PREPROCESSED_DIR`.
+    *   *Mục đích*: Loại bỏ sự trùng lặp tính toán và tăng tốc độ xử lý trong quá trình thế thực thể (Entity Substitution) bằng cách loại bỏ hoàn toàn việc gọi PyVi động trên CPU trong vòng lặp huấn luyện chính.
 *   **Mục đích & Cơ sở Khoa học**: Tiếng Việt phân tách âm tiết bằng khoảng trắng. Nghiên cứu của **ViDeBERTa** [8] chứng minh rằng tách từ ghép giúp mô hình hiểu đúng ranh giới của các thực thể y học phức tạp (thường là từ ghép đa âm tiết), hạn chế lỗi lệch biên thực thể (`boundary mismatch`) so với việc để cấp độ âm tiết đơn lẻ (syllable-level).
 
 #### Bước 2: Thiết lập Kiến trúc Mô hình và Định nghĩa Mô tả Thực thể Tĩnh
@@ -93,9 +96,16 @@ Quy trình tiền xử lý dữ liệu được thực hiện khép kín qua cá
         *   **Tập Train gốc**: **$80\%$** (1.365 câu). Dùng để làm Unlabeled Pool $U_0$ ban đầu cho vòng lặp Active Learning.
         *   **Tập Validation (Kiểm định) cố định**: **$10\%$** (170 câu). Giữ cố định xuyên suốt để kích hoạt cơ chế Early Stopping khi huấn luyện ở cả hai nhánh.
         *   **Tập Test (Kiểm thử) cố định**: **$10\%$** (171 câu). Giữ cố định xuyên suốt để đánh giá khách quan F1-score ở cuối mỗi vòng lặp.
-    2. **Khởi tạo Seed Set ($L_0$)**: Sử dụng mô hình Sentence-BERT tiếng Việt tĩnh để mã hóa ngữ nghĩa toàn bộ tập Train ($U_0$). Áp dụng thuật toán phân cụm **K-Means** ($K=85$) để gom nhóm. Lựa chọn câu gần tâm cụm nhất để tạo Seed Set $L_0$ dưới dạng câu thô (5% tập dữ liệu, khoảng 85 câu).
+    2. **Khởi tạo Seed Set ($L_0$)**: Thay vì sử dụng K-Means hay Gazetteer-guided Selection (không đảm bảo phủ đủ các nhãn thiểu số), hệ thống áp dụng **Stratified Sampling (Lấy mẫu phân tầng) dựa trên nhãn chuẩn (gold labels)** của tập Train. Cụ thể, phân nhóm các câu trong tập Train thành 6 tầng phân lớp (strata) theo độ hiếm của thực thể:
+        *   Tầng 1: `Organisation` (99 câu)
+        *   Tầng 2: `DateTime` (110 câu, không chứa ORG)
+        *   Tầng 3: `Location` (91 câu, không chứa ORG/DATE)
+        *   Tầng 4: `DiagnosticProcedure` (154 câu, không chứa ORG/DATE/LOC)
+        *   Tầng 5: `Symptom_and_Disease` (427 câu, không chứa ORG/DATE/LOC/DP)
+        *   Tầng 6: `O` (208 câu, không chứa bất kỳ thực thể nào)
+        Rút ngẫu nhiên từ mỗi tầng theo số lượng phân bổ định lượng cố định: **15 câu từ mỗi tầng từ 1 đến 5, và 10 câu từ tầng 6**, tạo thành đúng 85 câu cho Seed Set $L_0$.
         *   *Gán nhãn khởi tạo*: Mô phỏng việc gán nhãn bằng cách mở nhãn chuẩn (gold labels) cho 85 câu này.
-*   **Mục đích & Cơ sở Khoa học**: Giải quyết bài toán **khởi động lạnh (cold start)**. Theo nghiên cứu gán nhãn lâm sàng của *Chen và cộng sự* [1], việc sử dụng chiến lược dựa trên tính đa dạng (**CLUSTER**) thông qua K-Means ở vòng lặp đầu tiên giúp bao phủ tốt không gian khái niệm ban đầu.
+*   **Mục đích & Cơ sở Khoa học**: Giải quyết bài toán **khởi động lạnh (cold start)**. Lấy mẫu phân tầng đảm bảo tất cả các lớp thực thể (đặc biệt là các lớp thiểu số nghiêm trọng như `Organisation` và `DateTime`) đều được xuất hiện đầy đủ trong $L_0$, giúp mô hình học được ranh giới và ma trận chuyển đổi trạng thái của tất cả các lớp ngay từ Vòng 0, khắc phục triệt để hiện tượng F1-score bằng 0 ở vòng đầu.
 *   **Tính công bằng nghiên cứu**: Tập $L_0$ và tập chưa gán nhãn $U_0 \setminus L_0$ này sẽ được nhân bản và **dùng chung làm điểm xuất phát cho cả 2 nhánh thí nghiệm A và B** ở dạng các câu thô.
 
 ---
@@ -120,12 +130,12 @@ Mỗi nhánh thí nghiệm sẽ bắt đầu vòng lặp huấn luyện độc l
 *   **Mô tả thực hiện theo từng nhánh**:
     *   **Nhánh A**:
         1. *Định dạng mô tả nhãn & Downsampling (Mới)*: Hệ thống nhân bản mỗi câu trong tập dữ liệu $L_{t,\text{aug}}$ thành chuỗi đầu vào ghép nối với mô tả thực thể: `[CLS] s [SEP] d_c [SEP]`. Nhãn target BIO được chuyển về nhãn nhị phân động `[B, I, O]` tương ứng với thực thể $c$. Để tránh lặp lại ngữ cảnh y hệt nhau 15-20 lần (do lặp lại mẫu của DS và nhân bản câu 5x) dẫn đến học thuộc lòng ngữ cảnh (Context Memorization), hệ thống áp dụng cơ chế **Negative Query Downsampling**: giữ lại 100% các câu truy vấn dương tính và chỉ lấy ngẫu nhiên 1 câu truy vấn âm tính (nơi thực thể không xuất hiện trong câu) cho mỗi câu thô.
-        2. *Áp dụng Contextual Word Masking*: Che giấu ngẫu nhiên (thế bằng token `[MASK]`) các thực thể mục tiêu trong câu đầu vào với xác suất 18%. Đồng thời áp dụng che giấu ngẫu nhiên ** 15% đối với các từ ngữ cảnh thông thường (nhãn O)** để làm nhiễu loạn các mẫu ngữ cảnh lặp lại, buộc DeBERTa phải học các cấu trúc cú pháp suy rộng.
-        3. *Huấn luyện LoRA với Weighted Loss & LLRD*: Đóng băng tham số gốc của DeBERTa, chỉ cập nhật trọng số của LoRA Adapters và đầu phân loại Linear-CRF. Tính toán hàm loss CRF có áp dụng trọng số phạt mất cân bằng lớp (Weighted CRF Loss: nhãn `B` nhân hệ số 2.0, nhãn `I` nhân hệ số 1.5, nhãn `O` nhân hệ số 1.0). Áp dụng LLRD: learning rate của LoRA là `2e-5`, learning rate của Linear-CRF là `5e-4` hoặc `1e-3` để hội tụ nhanh. Đánh giá loss trên tập **Validation cố định** (không áp dụng Masking/Downsampling). Dừng sớm (Early Stopping) nếu loss validation ngừng giảm liên tục trong 3 epoch.
+        2. *Áp dụng Contextual Word Masking*: Để ổn định quá trình học ranh giới thực thể ở các vòng lặp đầu tiên, cơ chế che giấu từ ngữ cảnh được điều chỉnh động: **tắt hoàn toàn (tỷ lệ 0%) trong 3 vòng đầu tiên (vòng 0, 1, 2)** và tự động kích hoạt lại từ vòng 3 trở đi với tỷ lệ mặc định (che giấu 18% cho thực thể, 15% cho từ ngữ cảnh nhãn O).
+        3. *Huấn luyện LoRA với Class-aware Positive Query Weighting & LLRD*: Đóng băng tham số gốc của DeBERTa, chỉ cập nhật trọng số của LoRA Adapters và đầu phân loại Linear-CRF. Tính toán hàm loss CRF có áp dụng **Class-aware Positive Query Weighting (Trọng số truy vấn dương tính phân biệt theo lớp)**: sử dụng `reduction='none'` để lấy vector loss của từng câu trong batch. Đối với các truy vấn dương tính (chứa nhãn B hoặc I), nhân với trọng số tương ứng của lớp đó (`Organisation`: 5.0, `DateTime`: 4.0, `Location`: 3.0, `DiagnosticProcedure`: 2.0, `Symptom_and_Disease`: 1.0); đối với các truy vấn âm tính (chỉ chứa nhãn O), giữ nguyên trọng số là `1.0` để tránh phóng đại loss nhãn O. Áp dụng LLRD: learning rate của LoRA tăng lên **`1e-4`** (để hội tụ nhanh trên tập dữ liệu nhỏ), learning rate của Linear-CRF là `5e-4` hoặc `1e-3`. Đánh giá loss có trọng số trên tập **Validation cố định** (không áp dụng Masking/Downsampling). Dừng sớm (Early Stopping) sau **15 epoch** nếu loss validation không giảm (số epoch huấn luyện tối đa được tăng lên **30 epoch**).
     *   **Nhánh B**:
         1. *Định dạng mô tả nhãn & Downsampling (Mới)*: Áp dụng định dạng mô tả nhãn và bộ lọc giảm mẫu truy vấn âm tính ngẫu nhiên tương tự Nhánh A để kiểm soát biến số công bằng.
-        2. *Áp dụng Contextual Word Masking*: Áp dụng che giấu ngẫu nhiên thực thể (18%) và từ ngữ cảnh (15%) tương tự Nhánh A.
-        3. *Huấn luyện với Weighted Loss & LLRD*: Chỉ huấn luyện các tham số LoRA Adapters và đầu phân loại Linear-CRF của mô hình đối chứng với các cấu hình tối ưu hóa tương tự Nhánh A. Sử dụng dừng sớm (Early Stopping) trên tập **Validation cố định** để đảm bảo tính công bằng của các biến số được kiểm soát.
+        2. *Áp dụng Contextual Word Masking*: Áp dụng cơ chế điều chỉnh động tắt Masking ở 3 vòng đầu và kích hoạt từ vòng 3 tương tự Nhánh A.
+        3. *Huấn luyện với Weighted Loss & LLRD*: Huấn luyện mô hình đối chứng với các cấu hình tương tự Nhánh A (LoRA LR = 1e-4, 30 epochs, 15 patience, Class-aware Positive Query Weighting). Sử dụng dừng sớm (Early Stopping) trên tập **Validation cố định** để đảm bảo tính công bằng của các biến số được kiểm soát.
 *   **Mục đích & Cơ sở Khoa học**: 
     *   *Định dạng đầu vào & Downsampling*: Tiết kiệm 60% dữ liệu huấn luyện dư thừa, tăng tốc độ chạy gấp 2 lần và giải quyết triệt để vấn đề mất cân bằng nhãn và quá khớp template.
     *   *Contextual Word Masking*: Chống overfitting cực tốt nhờ làm mờ ngữ cảnh lặp lại của dữ liệu tăng cường.
