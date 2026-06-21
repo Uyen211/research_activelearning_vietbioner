@@ -1,0 +1,7 @@
+{
+    "Symptom_and_Disease": "triệu_chứng lâm_sàng bệnh_lý dấu_hiệu bệnh lao_phổi",
+    "DiagnosticProcedure": "quy_trình chẩn_đoán xét_nghiệm kỹ_thuật y_học lâm_sàng",
+    "Location": "khu_vực địa_lý địa_điểm vị_trí địa_danh",
+    "DateTime": "ngày_tháng năm khoảng thời_gian thời_điểm",
+    "Organisation": "tổ_chức y_tế bệnh_viện viện nghiên_cứu cơ_sở y_khoa"
+}

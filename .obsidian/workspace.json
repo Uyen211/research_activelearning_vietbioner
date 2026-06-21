@@ -1,0 +1,255 @@
+{
+  "main": {
+    "id": "e1d8da2484f014b3",
+    "type": "split",
+    "children": [
+      {
+        "id": "e49e69ec342db085",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2fd2f4cc28ddee93",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "proposal/05_evaluation_and_pipeline/pipeline.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "pipeline"
+            }
+          },
+          {
+            "id": "4d2d2f891c07306e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "proposal/05_evaluation_and_pipeline/pipeline.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "pipeline"
+            }
+          },
+          {
+            "id": "8794b3fffda7cb0b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "proposal/05_evaluation_and_pipeline/pipeline.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "pipeline"
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "37086a87499404a7",
+    "type": "split",
+    "children": [
+      {
+        "id": "709e73d9d86f75c8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "badd659800daba3b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "28b33f40333351e1",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "4d1083776a5825e1",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "22d5d3bcf21e1dde",
+    "type": "split",
+    "children": [
+      {
+        "id": "109df2e1e6c69b73",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a40fdf52c1569c97",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Chiến lược.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Chiến lược"
+            }
+          },
+          {
+            "id": "ba93d07d8ef6959c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Chiến lược.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Chiến lược"
+            }
+          },
+          {
+            "id": "0ccdb3052e0ff8a7",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "235a06094a93e948",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "caff1c14781667a1",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Chiến lược.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Chiến lược"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "8794b3fffda7cb0b",
+  "lastOpenFiles": [
+    "colab/dataset/preprocessed/dev_segmented.txt",
+    "colab/dataset/preprocessed/train_segmented.txt",
+    "colab/dataset/preprocessed/test_segmented.txt",
+    "colab/dataset/preprocessed/metadata.json",
+    "colab/dataset/preprocessed/entity_descriptions_segmented.json",
+    "colab/dataset/preprocessed/drive-download-20260620T102745Z-3-001/metadata.json",
+    "colab/dataset/preprocessed/drive-download-20260620T102745Z-3-001",
+    "colab/dataset/preprocessed/drive-download-20260620T102745Z-3-001.zip",
+    "colab/dataset/preprocessed/Unconfirmed 946084.crdownload",
+    "colab/dataset/preprocessed",
+    "colab/dataset/New folder",
+    "proposal/fix/04_conclusion_and_fix.md",
+    "proposal/fix/05_loss_and_overfitting_analysis.md",
+    "proposal/05_evaluation_and_pipeline/pipeline.md",
+    "proposal/fix/03_code_and_bug_investigation.md",
+    "proposal/fix/02_algorithm_design.md",
+    "proposal/03_model_architecture/kien_truc_mo_hinh.md",
+    "proposal/fix/lora_colab.md",
+    "proposal/fix/01_dataset_analysis.md",
+    "literature_review/raw_summaries/2022.lrec-1.385.md",
+    "proposal/02_dataset_analysis/vietbioner.md",
+    "proposal/02_dataset_analysis/gazetter.md",
+    "proposal/01_introduction_and_goals/muc_tieu_va_ket_qua.md",
+    "proposal/06_research_rationale/chuoi_suy_luan_thiet_ke.md",
+    "prompts/ke_hoach_trien_khai_code.md",
+    "prompts/research_paper_prompt.md",
+    "proposal/01_introduction_and_goals/dong_luc_nghien_cuu.md",
+    "vietbioner/VietBioNER/img/barchart.png",
+    "vietbioner/VietBioNER/data_brat/README.md",
+    "README.md",
+    "proposal/03_model_architecture/Loss-Prediction_Module.md",
+    "proposal/02_dataset_analysis/phan_tich_dataset.md",
+    "proposal/04_active_learning/distant_supervision_augmentation.md",
+    "proposal/04_active_learning/Entity_type_description.md",
+    "literature_review/summary_synthesis.md",
+    "proposal/05_evaluation_and_pipeline/danh_gia_va_trien_khai.md",
+    "proposal/04_active_learning/active_learning_chi_tiet.md"
+  ]
+}
