@@ -20,7 +20,7 @@ Các tệp Gazetteer được xây dựng từ hai nguồn chính: trích xuất
 
 ### 2.1. Tại sao phải lọc rò rỉ?
 Trong thực nghiệm Học chủ động (Active Learning), tập Validation (`dev.txt`) và Test (`test.txt`) phải được giữ cô lập hoàn toàn (cả về ngữ cảnh lẫn từ vựng thực thể) để đánh giá khách quan khả năng suy rộng của mô hình. 
-Nếu một cụm từ trong Gazetteer xuất hiện trong tập Test, việc sử dụng Gazetteer này để tăng cường dữ liệu huấn luyện (Distant Supervision) sẽ tương đương với việc **gián tiếp nạp tri thức tập kiểm thử vào mô hình**, làm sai lệch kết quả thực nghiệm F1-score (Data Leakage).
+Nếu một cụm từ trong Gazetteer xuất hiện trong tập Test, việc sử dụng Gazetteer này để tăng cường dữ liệu huấn luyện bằng cơ chế Thế thực thể dựa trên từ điển (DES) sẽ tương đương với việc **gián tiếp nạp tri thức tập kiểm thử vào mô hình**, làm sai lệch kết quả thực nghiệm F1-score (Data Leakage).
 
 ### 2.2. Thuật toán lọc trùng tự động (`filter_gazetteers.py`)
 Chúng tôi đã xây dựng và chạy script [filter_gazetteers.py](file:///C:/Users/Admin/.gemini/antigravity-ide/brain/1a923252-cf62-43f9-9226-5dcb22a6c310/scratch/filter_gazetteers.py) thực thi quy trình sau:
@@ -52,7 +52,7 @@ Bảng thống kê số lượng từ khóa của Gazetteer trước và sau khi
 
 ## 3. Tiền xử lý Tách từ ghép Động (Dynamic Tokenization)
 
-Khi chèn một thực thể từ Gazetteer vào câu gốc trong pha Tăng cường dữ liệu (Distant Supervision), để đảm bảo không phá vỡ cấu trúc ngữ liệu tiếng Việt đã được tách từ ghép:
+Khi chèn một thực thể từ Gazetteer vào câu gốc trong pha Tăng cường dữ liệu bằng Thế thực thể dựa trên từ điển (DES), để đảm bảo không phá vỡ cấu trúc ngữ liệu tiếng Việt đã được tách từ ghép:
 *   Mã nguồn thực nghiệm gọi thư viện PyVi (`ViTokenizer.tokenize`) trên chuỗi thực thể mới lấy từ Gazetteer để tách từ ghép động (ví dụ: *"sinh thiết màng phổi"* $\rightarrow$ *"sinh_thiết màng_phổi"*).
 *   Chia tách chuỗi kết quả theo khoảng trắng để tạo mảng token mới.
 *   Gán nhãn `B-` cho token đầu tiên và nhãn `I-` cho các token còn lại.

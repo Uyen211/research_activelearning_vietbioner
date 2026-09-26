@@ -24,20 +24,20 @@ graph TD
     Sub4["[1] ocae197 (JBI 2019)"] -->|Giải quyết Cold-Start & Đo chi phí thực tế| Cold_Edit["Cluster Initialization (K-Means) & Levenshtein Edit Distance"]
     
     %% Augmentation & Representation
-    Sub5["[2] applsci-12-05775 (ApplSci 2022)"] -->|Khắc phục mất cân bằng lớp| DS["Tăng cường dữ liệu: Distant Supervision (DS)"]
+    Sub5["[2] applsci-12-05775 (ApplSci 2022)"] -->|Khắc phục mất cân bằng lớp| DES["Tăng cường dữ liệu: Dictionary-based Entity Substitution (DES)"]
     Sub6["[12] OPENBIONER (NAACL 2025)"] -->|Hiểu ngữ nghĩa nhãn hạn chế OOV| Prompt["Entity Type Description (Mô tả nhãn)"]
 
     %% Integration
-    Backbone --> BranchA["Nhánh A (Đề xuất AL + DS)"]
-    Backbone --> BranchB["Nhánh B (Random + DS)"]
+    Backbone --> BranchA["Nhánh A (Đề xuất AL + DES)"]
+    Backbone --> BranchB["Nhánh B (Random + DES)"]
     Head --> BranchA
     Head --> BranchB
     Prompt --> BranchA
     Prompt --> BranchB
     Cold_Edit --> BranchA
     Cold_Edit --> BranchB
-    DS --> BranchA
-    DS --> BranchB
+    DES --> BranchA
+    DES --> BranchB
     
     LP_DK --> BranchA
     ME --> BranchA
@@ -62,7 +62,7 @@ graph TD
 *   **Chuỗi suy luận**:
     1. Kiến trúc phân loại chuỗi **CRF (Conditional Random Fields)** tối ưu hóa phân phối xác suất của toàn bộ chuỗi nhãn một cách toàn cục thay vì độc lập ở từng token, giúp đảm bảo tính hợp lý của ranh giới thực thể.
     2. Loại bỏ **BiLSTM** giúp mô hình giữ lại nguyên vẹn thông tin mô tả truy vấn ($d_c$) từ cơ chế Self-Attention của DeBERTa mà không bị pha loãng bởi hơn 200 token `[PAD]`.
-    3. Việc kết hợp với cơ chế thích ứng tham số hiệu quả **LoRA** (Rank $r=8$) giúp đóng băng xương sống mô hình và chỉ tinh chỉnh một lượng nhỏ tham số, đóng vai trò như bộ điều hòa (regularizer) ngăn ngừa tình trạng học thuộc lòng ngữ cảnh template lặp đi lặp lại.
+    3. Việc kết hợp với cơ chế thích ứng tham số hiệu quả **LoRA** (Rank $r=16$) giúp đóng băng xương sống mô hình và chỉ tinh chỉnh một lượng nhỏ tham số, đóng vai trò như bộ điều hòa (regularizer) ngăn ngừa tình trạng học thuộc lòng ngữ cảnh template lặp đi lặp lại.
     4. **Quyết định**: Sử dụng đầu phân loại **LoRA + Linear + CRF Head** phía trên ViPubmedDeBERTa để đảm bảo tính nhất quán của chuỗi nhãn sinh ra, tránh overfitting trên dữ liệu nhỏ và tăng tốc độ hội tụ.
 
 ### 2.3. Tại sao chọn CRF Marginal Entropy thay vì Loss-Prediction Module để đo độ bất định?
@@ -89,13 +89,13 @@ graph TD
     1. Nghiên cứu lâm sàng của **ocae197** [1] chỉ ra tầm quan trọng của việc bắt đầu bằng chiến lược dựa trên tính đa dạng (**CLUSTER**) để bao phủ tối đa không gian khái niệm y học ban đầu.
     2. **Quyết định**: Sử dụng Sentence-BERT tiếng Việt tĩnh để trích xuất đặc trưng câu, sau đó áp dụng **K-Means** để gom cụm và chọn các mẫu gần tâm cụm nhất để tạo Seed Set $L_0$ (5%). Điều này giúp mô hình NER có một tập huấn luyện ban đầu toàn diện, trước khi chuyển giao quyền lực cho CRF Marginal Entropy ở các vòng sau.
 
-### 2.6. Tại sao phải đưa kỹ thuật Distant Supervision (DS) vào pipeline?
+### 2.6. Tại sao phải đưa kỹ thuật Thế thực thể dựa trên từ điển (DES) vào pipeline?
 *   **Thách thức**: Bộ dữ liệu `VietBioNER` [5] bị mất cân bằng lớp nghiêm trọng. Trong khi thực thể bệnh `Disease` xuất hiện rất nhiều, các thực thể như quy trình chẩn đoán `DiagnosticProcedure` hay tổ chức y tế `Organisation` lại cực kỳ khan hiếm, dẫn đến F1-score của các lớp này rất thấp (chỉ ~55.56%). Khi tập huấn luyện ban đầu $L_t$ còn quá nhỏ, mô hình sẽ hoàn toàn phớt lờ các thực thể hiếm này.
 *   **Chuỗi suy luận**:
-    1. Nghiên cứu **applsci-12-05775** [2] đã chứng minh sự phối hợp giữa **Active Learning** và **Distant Supervision (Giám sát từ xa)** mang lại hiệu quả vượt trội. Bằng cách sử dụng Cơ sở tri thức (KB/Gazetteer) để thay thế thực thể tương đương (Entity Substitution) trong các câu chứa thực thể hiếm, ta có thể tự động nhân bản dữ liệu chất lượng cao mà không tốn thêm chi phí gán nhãn chuyên gia.
+    1. Nghiên cứu **applsci-12-05775** [2] đã chứng minh sự phối hợp giữa **Active Learning** và **Thế thực thể dựa trên từ điển (Dictionary-based Entity Substitution - DES)** mang lại hiệu quả vượt trội. Bằng cách sử dụng Cơ sở tri thức (KB/Gazetteer) để thay thế thực thể tương đương (Entity Substitution) trong các câu chứa thực thể hiếm, ta có thể tự động nhân bản dữ liệu chất lượng cao mà không tốn thêm chi phí gán nhãn chuyên gia.
     2. **Phòng ngừa rò rỉ dữ liệu (Cách 1)**: Nếu các thực thể có trong tập kiểm tra (Test) và kiểm định (Val) nằm trong Gazetteer dùng để tăng cường tập Train, mô hình sẽ bị "học trước" và làm mất tính khách quan khi đánh giá khả năng nhận diện các thực thể ngoài từ điển (OOV). Vì vậy, ta áp dụng **Cách 1**: Loại bỏ vô điều kiện tất cả các cụm thực thể xuất hiện trong tập Validation và Test khỏi Gazetteer tĩnh.
     3. **Khống chế tỷ lệ tăng cường (Substitution Limit)**: Nếu thay thế toàn bộ Gazetteer vào mọi ngữ cảnh, số lượng mẫu của các lớp hiếm sẽ bùng nổ vượt quá các lớp phổ biến (gây đảo ngược phân phối lớp - Class Inversion) và khiến mô hình bị quá khớp với cấu trúc mẫu câu gốc (Template Overfitting). Giải pháp là giới hạn số lượng câu tăng cường sinh ra bằng cách **chỉ lấy ngẫu nhiên một số lượng hữu hạn $M$ thực thể** (với $M \in [2, 3]$) từ Gazetteer để thế vào mỗi câu gốc.
-    4. **Quyết định**: Áp dụng Distant Supervision kết hợp bộ lọc rò rỉ dữ liệu (Cách 1) và giới hạn thế thực thể ngẫu nhiên ($M \in [2, 3]$) để tăng cường dữ liệu cho các thực thể hiếm trong tập $L_t$ trước khi huấn luyện mô hình ở mỗi vòng lặp.
+    4. **Quyết định**: Áp dụng cơ chế thế thực thể dựa trên từ điển (DES) kết hợp bộ lọc rò rỉ dữ liệu (Cách 1) và giới hạn thế thực thể ngẫu nhiên ($M \in [2, 3]$) để tăng cường dữ liệu cho các thực thể hiếm trong tập $L_t$ trước khi huấn luyện mô hình ở mỗi vòng lặp.
 
 ### 2.7. Tại sao lại ghép nối Entity Type Description (Mô tả Thực thể)?
 *   **Thách thức**: Từ vựng y khoa mới hoặc từ ngoài từ điển (OOV) xuất hiện liên tục. Bản thân tên nhãn (như `DiagnosticProcedure`) quá thô và không mang thông tin ngữ nghĩa sâu sắc cho mô hình ngôn ngữ.
@@ -103,7 +103,7 @@ graph TD
     1. Nghiên cứu **OPENBIONER** [12] đề xuất kỹ thuật Cross-Encoder kết hợp mô tả ngôn ngữ tự nhiên của nhãn thực thể (`Entity Type Description`) thay vì chỉ dùng nhãn tượng trưng. Ví dụ, thay vì chỉ truyền nhãn `DiagnosticProcedure`, ta truyền đoạn mô tả định nghĩa ngữ nghĩa của nó.
     2. Điều này giúp mô hình tận dụng năng lực đọc hiểu văn bản của ViPubmedDeBERTa để học mối tương quan ngữ nghĩa giữa từ vựng trong câu và định nghĩa thực thể, từ đó nâng cao hiệu năng nhận diện thực thể hiếm hoặc OOV mà không cần lượng lớn dữ liệu gán nhãn chuyên gia.
     3. **Nguyên tắc công bằng thực nghiệm (Controlled Variable)**: Vì Entity Type Description cải tiến cách biểu diễn dữ liệu đầu vào của mô hình, nó phải được áp dụng **đồng thời và nhất quán ở cả hai nhánh thí nghiệm A và B**.
-    4. **Quyết định**: Ghép nối mô tả thực thể tự nhiên vào dữ liệu đầu vào dạng `[CLS] s [SEP] d_c [SEP]` cho cả hai nhánh trong tất cả các pha huấn luyện, đánh giá và suy luận. Sự khác biệt giữa Nhánh A và Nhánh B lúc này được cô lập duy nhất ở thuật toán chọn mẫu (CRF Marginal Entropy + Distinct-K vs. Random Selection), do cả hai nhánh đều sử dụng chung Entity Type Descriptions và Distant Supervision.
+    4. **Quyết định**: Ghép nối mô tả thực thể tự nhiên vào dữ liệu đầu vào dạng `[CLS] s [SEP] d_c [SEP]` cho cả hai nhánh trong tất cả các pha huấn luyện, đánh giá và suy luận. Sự khác biệt giữa Nhánh A và Nhánh B lúc này được cô lập duy nhất ở thuật toán chọn mẫu (CRF Marginal Entropy + Distinct-K vs. Random Selection), do cả hai nhánh đều sử dụng chung Entity Type Descriptions và cơ chế tăng cường thế thực thể (DES).
 
 ### 2.8. Tại sao đo chi phí bằng Levenshtein Edit Distance?
 *   **Thách thức**: Trong các nghiên cứu AL truyền thống, chi phí gán nhãn thường được đo một cách đơn giản bằng số lượng câu hoặc token được chọn. Tuy nhiên, trong quy trình ứng dụng thực tế (AI-assisted annotation), chuyên gia y tế không gán nhãn từ đầu mà thực hiện hiệu chỉnh (Post-editing) trên gợi ý nhãn (Pre-annotation) của mô hình.
@@ -125,7 +125,7 @@ Trong giai đoạn thiết kế ban đầu, đề tài dự kiến thiết lập
 ### 3.2. Đơn giản hóa thiết kế thực nghiệm tập trung vào Giả thuyết chính
 1. **Câu hỏi nghiên cứu cốt lõi**: Câu hỏi nghiên cứu chính của đề tài là chứng minh tính hiệu quả của phương pháp Active Learning cải tiến tích hợp (Nhánh A) trong việc tối ưu hóa chi phí so với phương pháp gán nhãn ngẫu nhiên truyền thống (Nhánh B).
 2. **Tránh làm loãng kết quả**: Việc tập trung tài nguyên hệ thống và lập luận khoa học vào **2 nhánh đối chứng song song (Dual-branch)** xuất phát từ cùng một Seed Set $L_0$ sẽ giúp bài viết luận văn và các biểu đồ đường cong học tập (Learning Curves) trở nên rõ ràng, mạch lạc, trực diện và thuyết phục hơn đối với hội đồng chấm đề tài.
-3. **Phân tích đóng góp thành phần (Ablation Study) thay thế cho Nhánh C**: Thay vì chạy một nhánh C tĩnh độc lập (vốn gặp lỗi thuật toán trên CRF), đề tài sẽ thực hiện **Ablation Study** ngay trên Nhánh A (chạy thử nghiệm loại bỏ dần Distinct-K Filter hoặc Distant Supervision). Việc này mang lại giá trị khoa học cao hơn nhiều, giúp chứng minh rõ ràng mức độ đóng góp của từng thành phần cải tiến vào hiệu năng tổng thể.
+3. **Phân tích đóng góp thành phần (Ablation Study) thay thế cho Nhánh C**: Thay vì chạy một nhánh C tĩnh độc lập (vốn gặp lỗi thuật toán trên CRF), đề tài sẽ thực hiện **Ablation Study** ngay trên Nhánh A (chạy thử nghiệm loại bỏ dần Distinct-K Filter hoặc Thế thực thể dựa trên từ điển - DES). Việc này mang lại giá trị khoa học cao hơn nhiều, giúp chứng minh rõ ràng mức độ đóng góp của từng thành phần cải tiến vào hiệu năng tổng thể.
 
 ---
 
@@ -155,4 +155,4 @@ Dưới đây là sơ đồ thể hiện chuỗi suy luận quyết định khi 
  [Batch b mẫu tối ưu để gán nhãn] -> Gửi tới Oracle (Simulated bằng Gold Labels + Levenshtein)
 ```
 
-Chuỗi logic tích hợp này giúp chúng ta vượt qua mọi thách thức cốt lõi của bài toán Vietnamese BioNER: vượt qua giới hạn dữ liệu nhỏ bằng cách tối ưu hóa thông tin nạp vào, giải quyết mất cân bằng lớp bằng Distant Supervision, giảm lỗi ranh giới bằng DeBERTa + CRF, và lượng hóa công sức thực tế bằng chỉ số Edit Distance.
+Chuỗi logic tích hợp này giúp chúng ta vượt qua mọi thách thức cốt lõi của bài toán Vietnamese BioNER: vượt qua giới hạn dữ liệu nhỏ bằng cách tối ưu hóa thông tin nạp vào, giải quyết mất cân bằng lớp bằng cơ chế Thế thực thể dựa trên từ điển (DES), giảm lỗi ranh giới bằng DeBERTa + CRF, và lượng hóa công sức thực tế bằng chỉ số Edit Distance.

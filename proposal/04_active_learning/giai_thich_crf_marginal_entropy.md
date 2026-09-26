@@ -62,9 +62,9 @@ $$H_t(x) = - \sum_{l \in \{O, B, I\}} P(y_t = l | x) \log \left( P(y_t = l | x) 
 
 Trong đó $\epsilon = 10^{-9}$ là hằng số mịn tránh lỗi chia cho $0$ khi tính toán logarit.
 
-Độ bất định tổng thể của câu văn bản $x$ được tính bằng trung bình cộng giá trị entropy của các vị trí từ tố hợp lệ (active tokens, nằm trong `mask` của câu gốc, loại trừ phần padding và mô tả nhãn tĩnh):
+Độ bất định tổng thể của câu văn bản $x$ được tính bằng tổng (sum) giá trị entropy của các vị trí từ tố hợp lệ (active tokens, nằm trong `mask` của câu gốc, loại trừ phần padding và mô tả nhãn tĩnh) để tránh hiện tượng pha loãng độ bất định và tránh thiên vị các câu quá ngắn:
 
-$$\text{Uncertainty}(x) = \frac{1}{|V|} \sum_{t \in V} H_t(x)$$
+$$\text{Uncertainty}(x) = \sum_{t \in V} H_t(x)$$
 
 Với $V$ là tập hợp các chỉ số từ tố thuộc câu gốc $s$ (ở dạng word-level). Câu nào có $\text{Uncertainty}(x)$ càng cao chứng tỏ mô hình càng không chắc chắn về cấu trúc thực thể của câu đó.
 

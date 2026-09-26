@@ -19,11 +19,11 @@
 *   **Mục tiêu Tối ưu hóa Batch gán nhãn (Query Selection)**:
     *   Triển khai bộ lọc **Distinct-K Filter** sử dụng độ tương đồng Cosine trên các vector nhúng **S-BERT pre-computed** nhằm giải quyết bài toán Tập độc lập lớn nhất trên đồ thị tương đồng ngữ nghĩa. Giải pháp này giúp loại bỏ hiện tượng bất đẳng hướng (anisotropy) của vector [CLS] thô của Transformer và tối ưu hóa tài nguyên tính toán của bộ lọc. Mục tiêu là chọn ra một batch mẫu gán nhãn ($b$ câu) có độ bất định cao nhất nhưng có tính đa dạng ngữ nghĩa lớn nhất, tránh lãng phí ngân sách vào các mẫu trùng lặp thông tin.
 *   **Mục tiêu Giải quyết mất cân bằng nhãn**:
-    *   Thử nghiệm kỹ thuật **Tăng cường Dữ liệu Giám sát từ xa (Distant Supervision Augmentation)** thông qua từ điển thuật ngữ y học (Gazetteer) để bổ trợ tri thức cho các lớp nhãn hiếm gặp (như `DiagnosticProcedure`, `Organisation`) trong tập huấn luyện của các vòng AL.
+    *   Thử nghiệm kỹ thuật **Tăng cường Dữ liệu bằng Thế thực thể dựa trên từ điển (Dictionary-based Entity Substitution - DES)** thông qua từ điển thuật ngữ y học (Gazetteer) để bổ trợ tri thức cho các lớp nhãn hiếm gặp (như `DiagnosticProcedure`, `Organisation`) trong tập huấn luyện của các vòng AL.
 *   **Mục tiêu Thiết lập Đối chứng Nghiêm ngặt (Comparative Baselines)**:
     *   Thiết lập và chạy song song 2 nhánh thực nghiệm xuất phát từ cùng một tập dữ liệu khởi tạo ($L_0$), cả hai nhánh đều sử dụng chung cơ chế biểu diễn đầu vào **Entity Descriptions**:
-        *   **Nhánh A (Đề xuất)**: CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions + Distant Supervision.
-        *   **Nhánh B (Random Baseline)**: Chọn mẫu ngẫu nhiên hoàn toàn (Random Sampling) + Entity Descriptions + Distant Supervision.
+        *   **Nhánh A (Đề xuất)**: CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions + Dictionary-based Entity Substitution (DES).
+        *   **Nhánh B (Random Baseline)**: Chọn mẫu ngẫu nhiên hoàn toàn (Random Sampling) + Entity Descriptions + Dictionary-based Entity Substitution (DES).
     *   *Mục tiêu phân tách*: Việc so sánh đối chứng trực diện giữa Nhánh A (học chủ động đề xuất) và Nhánh B (chọn mẫu ngẫu nhiên) sẽ giúp làm nổi bật và định lượng chính xác hiệu năng cải thiện cũng như mức độ tiết kiệm chi phí gán nhãn thực tế của các giải pháp đề xuất.
 *   **Mục tiêu Lượng hóa nỗ lực gán nhãn (Annotation Effort Quantification)**:
     *   Tích hợp độ đo khoảng cách hiệu chỉnh **Levenshtein Edit Distance** vào kịch bản simulated oracle feedback. Mục tiêu là lượng hóa công sức chỉnh sửa nhãn máy gợi ý (Pre-annotation) của chuyên gia ở từng vòng lặp, phản ánh chính xác chi phí gán nhãn trong quy trình thực tế (AI-assisted annotation).
@@ -43,7 +43,7 @@ Thông qua việc thực hiện đề tài, nghiên cứu kỳ vọng đạt đ�
 
 ### 2.2. Giá trị Học thuật và Đóng góp Lý thuyết (Qualitative Contributions)
 *   **Framework Học chủ động cho Y sinh tiếng Việt**: Xây dựng thành công một quy trình (pipeline) học chủ động hoàn chỉnh, có kiểm chứng khoa học, áp dụng hiệu quả cho ngôn ngữ ít tài nguyên như tiếng Việt và miền chuyên sâu như y sinh.
-*   **Phân tích đóng góp thành phần (Ablation Study)**: Đưa ra báo cáo phân tích chi tiết về mức độ đóng góp của từng kỹ thuật (Distant Supervision, Entity Descriptions, CRF Marginal Entropy, Distinct-K Filter) vào tổng hiệu năng cải thiện của hệ thống.
+*   **Phân tích đóng góp thành phần (Ablation Study)**: Đưa ra báo cáo phân tích chi tiết về mức độ đóng góp của từng kỹ thuật (Dictionary-based Entity Substitution - DES, Entity Descriptions, CRF Marginal Entropy, Distinct-K Filter) vào tổng hiệu năng cải thiện của hệ thống.
 *   **Lập luận khoa học về chi phí hiệu chỉnh**: Đóng góp một góc nhìn đánh giá mới về chi phí gán nhãn dựa trên nỗ lực sửa đổi (edit distance) trong các nghiên cứu học chủ động mô phỏng tại Việt Nam.
 
 ### 2.3. Sản phẩm Bàn giao Vật lý (Deliverables)

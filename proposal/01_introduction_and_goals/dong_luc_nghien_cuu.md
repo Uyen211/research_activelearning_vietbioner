@@ -4,7 +4,7 @@
 
 ## 1. Đặt vấn đề và Động lực Nghiên cứu
 
-Trong lĩnh vực xử lý ngôn ngữ tự nhiên y sinh (Biomedical NLP) tiếng Việt, việc tạo dựng các bộ dữ liệu gán nhãn chất lượng cao là một thách thức lớn. Dữ liệu y sinh đòi hỏi người gán nhãn phải là các chuyên gia y tế (bác sĩ, dược sĩ) có chuyên môn sâu, dẫn đến chi phí nhân công và thời gian cực kỳ đắt đỏ. Bộ dữ liệu **VietBioNER** (văn bản học thuật chuyên sâu về bệnh lao) có quy mô tương đối nhỏ (1.706 câu) nhưng chứa các thực thể có độ phức tạp cao, đặc biệt là thực thể quy trình chẩn đoán (`DiagnosticProcedure`) với F1-score của các mô hình supervised hiện tại chỉ đạt khoảng 55.56%. 
+Trong lĩnh vực xử lý ngôn ngữ tự nhiên y sinh (Biomedical NLP) tiếng Việt, việc tạo dựng các bộ dữ liệu gán nhãn chất lượng cao là một thách thức lớn. Dữ liệu y sinh đòi hỏi người gán nhãn phải là các chuyên gia y tế (bác sĩ, dược sĩ) có chuyên môn sâu, dẫn đến chi phí nhân công và thời gian cực kỳ đắt đỏ. Bộ dữ liệu **VietBioNER** (văn bản học thuật chuyên sâu về bệnh lao) có quy mô tương đối nhỏ (1.706 câu gốc, thực tế sử dụng 1.362 câu sau tiền xử lý) nhưng chứa các thực thể có độ phức tạp cao, đặc biệt là thực thể quy trình chẩn đoán (`DiagnosticProcedure`) với F1-score của các mô hình supervised hiện tại chỉ đạt khoảng 55.56%. 
 
 Đề tài **"Nghiên cứu ứng dụng Active Learning để giảm chi phí gán nhãn dữ liệu trong bài toán Nhận dạng Thực thể Có tên cho văn bản y sinh học tiếng Việt"** được thực hiện nhằm giải quyết nút thắt này. 
 

@@ -14,18 +14,20 @@ graph TD
     EntityDesc --> WordSeg["Bộ tách từ ghép (PyVi)"]
     WordSeg --> Tokenizer["SentencePiece Tokenizer (128K Vocab)"]
     
-    subgraph Frozen_Backbone [Bộ mã hóa đóng băng]
-        Tokenizer --> Encoder["ViPubmedDeBERTa-base (Frozen)"]
-        Encoder --> LoRA["LoRA Adapters (Rank r=8) (Cập nhật tham số)"]
+    subgraph Backbone [Bộ mã hóa đặc trưng]
+        Tokenizer --> Encoder["ViPubmedDeBERTa-base (Frozen Backbone)"]
+        Encoder --> LoRA["LoRA Adapters (Rank r=16) (Cập nhật tham số)"]
     end
     
     subgraph Model_Head [Đầu phân loại chuỗi NER]
-        LoRA --> |"Hidden States H"| CRF["Lớp CRF (Conditional Random Field)"]
+        LoRA --> |"Hidden States H"| Linear["Lớp tuyến tính (Linear Layer)"]
+        Linear --> |"Điểm phát xạ Emissions"| CRF["Lớp CRF (Conditional Random Field)"]
         CRF --> Output_NER["Nhãn dự đoán y_CRF"]
     end
     
-    style Frozen_Backbone fill:#f5f5f5,stroke:#999,stroke-width:2px
+    style Encoder fill:#f5f5f5,stroke:#999,stroke-width:2px
     style LoRA fill:#ffe8cc,stroke:#ff9900,stroke-width:2px
+    style Linear fill:#d2e5ff,stroke:#0066cc,stroke-width:2px
     style CRF fill:#d4edda,stroke:#28a745,stroke-width:2px
 ```
 
@@ -38,7 +40,7 @@ graph TD
     *   *Phương pháp*: Sử dụng **ViPubmedDeBERTa-base** (86M tham số) làm mô hình ngôn ngữ nền tảng (backbone).
     *   *Rationale*: DeBERTaV3 sử dụng cơ chế chú ý tách biệt (*disentangled attention*), tính toán sự tương tác giữa nội dung và vị trí tương đối một cách độc lập, giúp nắm bắt cấu trúc ngữ pháp tốt hơn RoBERTa (nền tảng của PhoBERT). Đồng thời, ViPubmedDeBERTa được tiền huấn luyện liên tục trên 20 triệu tóm tắt bài báo y học PubMed tiếng Việt, có vốn từ vựng chuyên ngành y sinh vượt trội so với các mô hình tổng quát.
 *   **Đầu phân loại chuỗi (Sequence Labeling Head - Dùng chung)**:
-    *   *Phương pháp*: Lớp **Linear + CRF Head**. Trọng số gốc DeBERTa được đóng băng, các adapter **LoRA** (Rank $r=8$) học đặc trưng y khoa của tập dữ liệu nhỏ. Vector ẩn $H$ sau khi tinh chỉnh qua LoRA đi trực tiếp qua một lớp tuyến tính (Linear) rồi đưa vào lớp CRF (Conditional Random Field) mô hình hóa mối quan hệ phụ thuộc giữa các nhãn kề nhau.
+    *   *Phương pháp*: Lớp **Linear + CRF Head**. Trọng số gốc DeBERTa được đóng băng, các adapter **LoRA** (Rank $r=16$) học đặc trưng y khoa của tập dữ liệu nhỏ. Vector ẩn $H$ sau khi tinh chỉnh qua LoRA đi trực tiếp qua một lớp tuyến tính (Linear) rồi đưa vào lớp CRF (Conditional Random Field) mô hình hóa mối quan hệ phụ thuộc giữa các nhãn kề nhau.
     *   *Rationale*: Việc loại bỏ BiLSTM ngăn chặn lỗi triệt tiêu ngữ cảnh mô tả do padding. Lớp CRF giúp sửa chữa các lỗi phi logic về ranh giới thực thể (ví dụ nhãn `I-DISEASE` bắt buộc phải đứng sau `B-DISEASE`), tối ưu hóa độ chính xác biên thực thể.
 *   **Đo lường độ bất định trực tiếp từ CRF (CRF Marginal Entropy - Chỉ dùng ở Nhánh A)**:
     *   *Phương pháp*: Thay vì sử dụng đầu phụ MLP dự đoán loss phức tạp dễ gây overfit trên dữ liệu nhỏ, Nhánh A tính toán trực tiếp độ bất định của câu thông qua **CRF Marginal Entropy (Entropy Xác suất biên)**.
@@ -77,8 +79,8 @@ Kiến trúc đề xuất là một **mô hình lai tùy chỉnh (Hybrid/Custom 
 Việc sử dụng tổ hợp **ViPubmedDeBERTa-base + LoRA + Linear-CRF + CRF Marginal Entropy + Entity Descriptions** thay vì các kiến trúc đơn giản hơn xuất phát từ 6 lý do khoa học và thực tiễn:
 
 1. **Hiệu quả tham số và Tránh quá khớp (Parameter Efficiency & Anti-Overfitting)**:
-   - Bộ dữ liệu `VietBioNER` có kích thước rất nhỏ (1.362 câu sau khi gộp). Khi kết hợp Distant Supervision và nhân bản câu 5x để ghép mô tả nhãn, số lượng lặp lại ngữ cảnh rất lớn dễ gây overfitting.
-   - Tích hợp **LoRA** giúp đóng băng backbone và chỉ cập nhật 800k tham số (~0.9%), tạo ra bộ điều hòa công suất mạng hoàn hảo, ngăn chặn việc mô hình học thuộc lòng ngữ cảnh. Đồng thời, `ViPubmedDeBERTa-base` chỉ có **86M tham số** giúp tốc độ huấn luyện nhanh và tiết kiệm tài nguyên GPU.
+   - Bộ dữ liệu `VietBioNER` có kích thước rất nhỏ (1.362 câu sau khi gộp). Khi kết hợp thế thực thể dựa trên từ điển (DES) và nhân bản câu 5x để ghép mô tả nhãn, số lượng lặp lại ngữ cảnh rất lớn dễ gây overfitting.
+   - Tích hợp **LoRA** giúp đóng băng backbone và chỉ cập nhật một lượng rất nhỏ tham số (~1.8%), tạo ra bộ điều hòa công suất mạng hoàn hảo, ngăn chặn việc mô hình học thuộc lòng ngữ cảnh. Đồng thời, `ViPubmedDeBERTa-base` chỉ có **86M tham số** giúp tốc độ huấn luyện nhanh và tiết kiệm tài nguyên GPU.
 2. **Ưu thế công nghệ của kiến trúc DeBERTaV3**:
    - DeBERTaV3 sử dụng cơ chế chú ý tách biệt (**disentangled attention**), tính toán ma trận tương tác giữa nội dung và vị trí tương đối độc lập, giúp mô hình base 86M của DeBERTa đạt F1 vượt trội hơn PhoBERT-large 370M trên bài toán NER tiếng Việt.
 3. **Sự thích ứng miền y sinh học thuật (Domain Alignment)**:
@@ -88,7 +90,7 @@ Việc sử dụng tổ hợp **ViPubmedDeBERTa-base + LoRA + Linear-CRF + CRF M
 5. **Sự vượt trội của CRF Marginal Entropy so với Softmax Entropy truyền thống**:
    - CRF Marginal Entropy tính toán xác suất biên dựa trên thuật toán Forward-Backward toàn cục trên ma trận chuyển trạng thái CRF. Nó không chỉ phản ánh mức độ không chắc chắn của từng từ đơn lẻ như đầu Softmax độc lập, mà còn nắm bắt được độ bất định trong mối quan hệ chuyển tiếp nhãn giữa các token kề nhau (ranh giới thực thể). Hơn nữa, nó tính toán trực tiếp từ các tham số mô hình hiện tại mà không cần thêm tham số phụ, loại bỏ hoàn toàn overfitting trên tập dữ liệu nhỏ so với các mô-đun dự đoán loss (LPM) phụ trợ.
 6. **Sự cần thiết của cơ chế Entity Type Description dùng chung cho cả hai nhánh**:
-   - Việc đưa mô tả tự nhiên của thực thể vào đầu vào giúp mô hình ở cả hai nhánh hiểu sâu ngữ nghĩa nhãn thực thể. Bằng cách áp dụng nhất quán định dạng này cho cả Nhánh A và Nhánh B, chúng ta kiểm soát tốt các biến số thực nghiệm (controlled variables). Mọi sự chênh lệch về hiệu năng F1 và tỷ lệ tiết kiệm chi phí (SSR, ESR) qua các vòng lặp hoàn toàn do chiến lược chọn mẫu AL (CRF Marginal Entropy + Distinct-K) và Distant Supervision quyết định.
+   - Việc đưa mô tả tự nhiên của thực thể vào đầu vào giúp mô hình ở cả hai nhánh hiểu sâu ngữ nghĩa nhãn thực thể. Bằng cách áp dụng nhất quán định dạng này cho cả Nhánh A và Nhánh B, chúng ta kiểm soát tốt các biến số thực nghiệm (controlled variables). Mọi sự chênh lệch về hiệu năng F1 và tỷ lệ tiết kiệm chi phí (SSR, ESR) qua các vòng lặp hoàn toàn do chiến lược chọn mẫu AL (CRF Marginal Entropy + Distinct-K) và cơ chế thế thực thể dựa trên từ điển (DES) quyết định.
 
 ### 2.3. Cơ sở khoa học / Nguồn tham khảo và Sự phù hợp với VietBioNER
 Thiết kế mô hình này được xây dựng trên nền tảng của các công trình khoa học quốc tế uy tín:

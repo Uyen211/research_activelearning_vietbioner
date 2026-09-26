@@ -4,7 +4,7 @@
 
 ## 1. Phương pháp đối chứng Trực diện để trả lời Câu hỏi Nghiên cứu
 
-Để chứng minh tính thuyết phục học thuật của đề tài, chúng ta thiết lập hai kịch bản đối chứng chặt chẽ. Cả hai nhánh đều sử dụng chung mô hình nền tảng, định dạng đầu vào (Entity Descriptions) và phương pháp tăng cường dữ liệu (Distant Supervision) để đảm bảo so sánh công bằng trong cùng một môi trường:
+Để chứng minh tính thuyết phục học thuật của đề tài, chúng ta thiết lập hai kịch bản đối chứng chặt chẽ. Cả hai nhánh đều sử dụng chung mô hình nền tảng, định dạng đầu vào (Entity Descriptions) và phương pháp tăng cường dữ liệu Thế thực thể dựa trên từ điển (DES) để đảm bảo so sánh công bằng trong cùng một môi trường:
 
 ```
                   ┌──> [Nhánh A: Active Learning (AL)] ──> Đường cong học tập AL (F1 vs Budget)
@@ -35,8 +35,8 @@ Chúng ta xác định một mức hiệu năng mục tiêu (Target Performance)
 
 ### 1.3. Phân tích Ablation Study (Đóng góp của các thành phần)
 Để đánh giá định lượng đóng góp của từng thành phần đề xuất, chúng ta thực hiện Ablation Study trên Nhánh A bằng cách chạy và so sánh các biến thể rút gọn sau:
-1.  **Đầy đủ (Nhánh A đầy đủ)**: `ViPubmedDeBERTa + CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions + Distant Supervision`.
-2.  **Bỏ Distant Supervision**: `ViPubmedDeBERTa + CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions` (Không áp dụng thế thực thể cho nhãn hiếm).
+1.  **Đầy đủ (Nhánh A đầy đủ)**: `ViPubmedDeBERTa + CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions + Dictionary-based Entity Substitution (DES)`.
+2.  **Bỏ thế thực thể dựa trên từ điển (DES)**: `ViPubmedDeBERTa + CRF Marginal Entropy + Distinct-K Filter + Entity Descriptions` (Không áp dụng thế thực thể cho nhãn hiếm).
 3.  **Bỏ bộ lọc Distinct-K Filter**: `ViPubmedDeBERTa + CRF Marginal Entropy + Entity Descriptions` (Chọn mẫu trực tiếp theo entropy biên cao nhất mà không lọc trùng ngữ nghĩa).
 4.  **Bỏ Entity Descriptions**: `ViPubmedDeBERTa + CRF Marginal Entropy + Distinct-K Filter` (Đầu vào mô hình chỉ có câu văn bản thô $s$ thay vì ghép nối mô tả nhãn $d_c$, áp dụng cho cả hai nhánh đối chứng để đo lường mức độ cải thiện chung của biểu diễn nhãn).
 *   Nghiên cứu này sẽ chỉ rõ sự kết hợp của các module nâng cao đóng góp bao nhiêu % vào tổng lượng F1-score cải thiện và mức độ tối ưu hóa chi phí.
@@ -81,7 +81,7 @@ Trong mã nguồn mô phỏng, khoảng cách Levenshtein được tính toán t
 *   Mô phỏng quy trình gán nhãn tự động bằng cách lấy nhãn chuẩn từ tập train gốc của VietBioNER để phản hồi cho mô hình sau mỗi vòng chọn mẫu. Ghi nhận số lượng câu gán nhãn.
 
 ### Giai đoạn 3: Tích hợp Module Nâng cao
-*   Tích hợp kỹ thuật gán nhãn dựa trên mô tả thực thể (Entity Type Description) và Distant Supervision Augmentation.
+*   Tích hợp kỹ thuật gán nhãn dựa trên mô tả thực thể (Entity Type Description) và Thế thực thể dựa trên từ điển (DES).
 *   Chạy thử nghiệm Ablation Study để đo lường tác động của từng module.
 *   Mô phỏng quy trình tính khoảng cách Levenshtein edit distance giữa dự đoán của mô hình và nhãn chuẩn để đo lường chi phí thao tác của con người.
 

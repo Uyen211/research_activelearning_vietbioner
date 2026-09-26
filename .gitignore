@@ -1,0 +1,27 @@
+# PyTorch Model Checkpoints & Weights
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.onnx
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Data cache & Heavy logs
+*.npy
+*.npz
+*.tar.gz
+*.zip
+*.7z
+
+# IDE & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
