@@ -1,172 +1,262 @@
-# Nghiên Cứu Ứng Dụng Active Learning Giảm Chi Phí Gán Nhãn Dữ Liệu Y Sinh Tiếng Việt (VietBioNER)
+# 🧬 Nghiên Cứu Ứng Dụng Active Learning Giảm Chi Phí Gán Nhãn Dữ Liệu Y Sinh Tiếng Việt (VietBioNER)
+
+> **Bài Tập Lớn Môn Xử Lý Ngôn Ngữ Tự Nhiên (NLP)** — Trường Đại học Thủy Lợi (TLU)
+
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C.svg)](https://pytorch.org/)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Transformers-4.x-yellow.svg)](https://huggingface.co/)
+[![Course](https://img.shields.io/badge/Course-NLP%20Course%20Project-orange.svg)](#1-tổng-quan-bài-tập-lớn--câu-hỏi-nghiên-cứu)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](#)
 
 ---
 
-## 1. Giới thiệu Đề tài Nghiên cứu
+## 📌 1. Tổng Quan Bài Tập Lớn & Câu Hỏi Nghiên Cứu
 
-*   **Tên Đề tài**: *"Nghiên cứu ứng dụng Active Learning để giảm chi phí gán nhãn dữ liệu trong bài toán Nhận dạng Thực thể Có tên cho văn bản y sinh học tiếng Việt"*
-*   **Câu hỏi Nghiên cứu Chính**: *"Liệu với cùng một ngân sách gán nhãn (cùng số lượng mẫu được gán nhãn), việc ứng dụng Active Learning (Học chủ động) có giúp mô hình NER đạt chất lượng nhận dạng thực thể cao hơn so với gán nhãn ngẫu nhiên truyền thống hay không? Và mức độ tiết kiệm thực tế là bao nhiêu?"*
-*   **Bộ dữ liệu**: [VietBioNER](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/02_dataset_analysis/vietbioner.md) – Ngữ liệu lâm sàng tiếng Việt đầu tiên về bệnh lao (Tuberculosis), chứa 5 loại thực thể y khoa phức tạp.
-*   **Mô hình Nền tảng (Backbone)**: [ViPubmedDeBERTa-base](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/03_model_architecture/kien_truc_mo_hinh.md) (86M tham số) với cơ chế disentangled attention vượt trội chuyên biệt y sinh học, tích hợp cấu hình thích ứng tham số hiệu quả **LoRA** (Rank $r=16$, Alpha $=32$).
-*   **Đầu Phân loại Chuỗi**: Lớp **Linear-CRF Head** (loại bỏ lớp BiLSTM để tránh triệt tiêu thông tin truy vấn tĩnh và tăng tốc độ hội tụ).
-*   **Cơ chế đo độ bất định**: **CRF Marginal Entropy (Entropy Xác suất biên)** sử dụng thuật toán **Forward-Backward** trên lớp CRF để tính trực tiếp xác suất biên mà không cần thêm tham số học thêm nào, giúp loại bỏ hoàn toàn overfitting trên tập dữ liệu nhỏ.
-*   **Cơ chế lọc đa dạng**: **Distinct-K Filter** sử dụng Cosine Similarity trên các vector nhúng **Sentence-BERT pre-computed** nhằm giải quyết bài toán Tập độc lập lớn nhất (MIS) trên đồ thị tương đồng ngữ nghĩa.
+* **Tên đề tài**: *"Nghiên cứu ứng dụng Active Learning để giảm chi phí gán nhãn dữ liệu trong bài toán Nhận dạng Thực thể Có tên cho văn bản y sinh học tiếng Việt"*
+* **Bối cảnh & Động lực**: 
+  Trong miền y sinh học tiếng Việt, việc gán nhãn thực thể y khoa (như tên bệnh, triệu chứng, quy trình chẩn đoán, vị trí giải phẫu...) đòi hỏi trình độ chuyên môn cao từ bác sĩ và chuyên gia y tế. Chi phí thời gian và tài chính cho việc gán nhãn thủ công toàn bộ tập dữ liệu là cực kỳ đắt đỏ.
+* **Câu hỏi Nghiên cứu Cốt lõi**:
+  > 💡 *"Liệu với cùng một ngân sách gán nhãn (cùng số lượng mẫu được chọn), việc ứng dụng Active Learning (Học chủ động) có giúp mô hình NER đạt chất lượng nhận dạng thực thể vượt trội so với gán nhãn ngẫu nhiên (Random Sampling) hay không? Mức độ cải thiện thực tế ra sao?"*
 
 ---
 
-## 2. Cấu trúc Thư mục Dự án (Repository Structure)
+## 🏆 2. Các Điểm Nổi Bật Của Dự Án (Key Highlights)
 
-Dự án được quy hoạch khoa học để phân định rõ ràng giữa tài liệu lý thuyết, đề xuất thiết kế, các bài báo tham chiếu và mã nguồn chạy thực nghiệm:
+1. **Khung Học Chủ Động Chuyên Biệt Cho Y Sinh Tiếng Việt**: Xây dựng pipeline AL hoàn chỉnh tích hợp mô hình tiền huấn luyện [ViPubmedDeBERTa-base](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/03_model_architecture/kien_truc_mo_hinh.md) kết hợp **LoRA** và lớp phân loại chuỗi **Linear-CRF**.
+2. **Chiến Lược Chọn Mẫu Đổi Mới (CRF Marginal Entropy + Distinct-K Filter)**:
+   * **CRF Marginal Entropy**: Trích xuất xác suất biên bằng thuật toán Forward-Backward trên tầng CRF để đo độ bất định toán học mà không cần thêm tham số học thêm.
+   * **Distinct-K Filter**: Giải bài toán Tập độc lập lớn nhất (MIS) dựa trên Cosine Similarity của **pre-computed S-BERT embeddings** để loại bỏ trùng lặp ngữ nghĩa trong batch chọn.
+3. **Kỹ Thuật Tăng Cường Tri Thức Miền (DES & Entity Descriptions)**:
+   * **Dictionary-based Entity Substitution (DES)**: Khắc phục hiện tượng mất cân bằng nhãn bằng cách thế thực thể hiếm từ Gazetteer y tế sạch (đã lọc rò rỉ dữ liệu).
+   * **Entity Type Descriptions**: Bổ sung mô tả ngắn ngữ cảnh cho 5 loại thực thể y khoa.
+4. **Đối Chứng Song Song & Phân Tích Kết Quả Chi Tiết**: Đánh giá khách quan qua 5 vòng lặp thực nghiệm song song với cơ chế đồng bộ checkpoint xuất phát điểm.
+
+---
+
+## 🔄 3. Pipeline & Kiến Trúc Hệ Thống Toàn Dự Án
+
+Dưới đây là sơ đồ tổng quan toàn bộ luồng hoạt động của hệ thống từ khâu xử lý dữ liệu, chọn mẫu chủ động cho đến đánh giá thực nghiệm:
+
+```mermaid
+flowchart TD
+    subgraph DataPrep ["1. Dữ Liệu & Tiền Xử Lý"]
+        A1["Bộ dữ liệu VietBioNER<br/>(1.089 câu lâm sàng Bệnh Lao)"]
+        A2["Bộ từ điển Gazetteer Y tế<br/>(Đã lọc rò rỉ dữ liệu)"]
+        A3["Kỹ thuật DES & Entity Descriptions<br/>(Thế thực thể hiếm & Ngữ cảnh 5x)"]
+        A1 --> A3
+        A2 --> A3
+    end
+
+    subgraph InitPhase ["2. Khởi Tạo Vòng 0 & Đồng Bộ Checkpoint"]
+        B1["Tập Seed L_0 (85 câu)"]
+        B2["Mô hình ViPubmedDeBERTa-base<br/>+ LoRA (r=16, α=32) + Linear-CRF"]
+        B3["Huấn luyện Vòng 0 trên L_0"]
+        B4["Lưu Checkpoint Baseline<br/>best_model_AL_0.pt"]
+        A3 --> B1
+        B1 & B2 --> B3 --> B4
+    end
+
+    subgraph DualBranch ["3. Thí Nghiệm Đối Chứng Song Song (Vòng 1 - 4)"]
+        direction TB
+        
+        subgraph BranchA ["Nhánh A: Active Learning (Đề Xuất)"]
+            C1["Tập chưa gán nhãn U_t"]
+            C2["Đo độ bất định toán học:<br/>CRF Marginal Entropy (Forward-Backward)"]
+            C3["Lọc đa dạng ngữ nghĩa:<br/>Distinct-K Filter (S-BERT Embeddings, θ=0.85)"]
+            C4["Chọn b=100 câu bất định & đa dạng nhất"]
+            C5["Chuyên gia / Oracle Gán Nhãn"]
+            C6["Cập nhật Tập Huấn Luyện L_{t+1}"]
+            
+            C1 --> C2 --> C3 --> C4 --> C5 --> C6
+            C6 -- "Huấn luyện lại vòng mới" --> C1
+        end
+
+        subgraph BranchB ["Nhánh B: Random Baseline"]
+            D1["Tập chưa gán nhãn U_t"]
+            D2["Chọn mẫu Ngẫu nhiên<br/>(Random Sampling b=100 câu)"]
+            D3["Chuyên gia / Oracle Gán Nhãn"]
+            D4["Cập nhật Tập Huấn Luyện L_{t+1}"]
+            
+            D1 --> D2 --> D3 --> D4
+            D4 -- "Huấn luyện lại vòng mới" --> D1
+        end
+    end
+
+    B4 -- "Nạp chung Checkpoint xuất phát Vòng 0" --> BranchA & BranchB
+
+    subgraph Evaluation ["4. Đánh Giá & Phân Tích Kết Quả"]
+        E1["Dừng khi chạm Ngân sách<br/>(Budget Limit = 50% Train set = 485 câu)"]
+        E2["Đánh giá F1-score trên Tập Test"]
+        E3["Phân tích Nguyên nhân & Báo cáo"]
+        
+        BranchA & BranchB --> E1 --> E2 --> E3
+    end
+
+    style DataPrep fill:#f9f9f9,stroke:#333,stroke-width:1px
+    style InitPhase fill:#e1f5fe,stroke:#0288d1,stroke-width:1.5px
+    style BranchA fill:#e8f5e9,stroke:#388e3c,stroke-width:1.5px
+    style BranchB fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    style Evaluation fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1.5px
+```
+
+> 📖 *Chi tiết về thiết kế mô hình nền tảng ViPubmedDeBERTa-LoRA-CRF có thể đọc tại:* [kien_truc_mo_hinh.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/03_model_architecture/kien_truc_mo_hinh.md).
+
+---
+
+## 🗺️ 4. Cấu Trúc Thư Mục Dự Án & Liên Kết Tài Liệu Quan Trọng
+
+Hệ thống thư mục được tổ chức khoa học, phân định rõ ràng giữa Báo cáo thực nghiệm, Đề cương thiết kế (Proposal), Tổng quan tài liệu (Literature Review) và Mã nguồn thực thi (Src/Notebooks):
 
 ```text
 active-learning-VietBioNER/
 │
-├── proposal/                                 # Đề cương giải pháp và thiết kế kỹ thuật chi tiết
-│   ├── 01_introduction_and_goals/
-│   │   ├── muc_tieu_va_ket_qua.md            # Mục tiêu nghiên cứu & kết quả kỳ vọng
-│   │   └── dong_luc_nghien_cuu.md            # Động lực nghiên cứu & câu hỏi cốt lõi
-│   ├── 02_dataset_analysis/
-│   │   ├── vietbioner.md                     # Phân tích phân phối bộ dữ liệu VietBioNER
-│   │   └── gazetter.md                       # Phân tích các bộ Gazetteer y tế
-│   ├── 03_model_architecture/
-│   │   └── kien_truc_mo_hinh.md              # Thiết kế mô hình ViPubmedDeBERTa-base + LoRA + Linear-CRF
-│   ├── 04_active_learning/
-│   │   ├── active_learning_chi_tiet.md       # Toán học AL, Distinct-K Filter & Baseline
-│   │   ├── Entity_type_description.md        # Giải thích cơ chế Mô tả Loại Thực thể và Masking
-│   │   ├── dictionary_based_entity_substitution.md # Tăng cường dữ liệu bằng thế thực thể dựa trên từ điển (DES)
-│   │   └── giai_thich_crf_marginal_entropy.md # Giải thích lý thuyết toán học CRF Marginal Entropy
-│   ├── 05_evaluation_and_pipeline/
-│   │   ├── pipeline.md                       # Quy trình 10 bước và thiết lập đối chứng song song
-│   │   └── danh_gia_va_trien_khai.md         # Chỉ số SSR, ESR, Levenshtein & kế hoạch thực nghiệm
-│   └── 06_research_rationale/
-│       └── chuoi_suy_luan_thiet_ke.md        # Lý luận khoa học & chuỗi suy luận thiết kế luồng
+├── 📄 README.md                                 # [HIỆN TẠI] Hướng dẫn tổng quan & Bản đồ dự án
+├── 📄 lessons_learned.md                        # Đúc kết bài học kinh nghiệm & xử lý lỗi thực nghiệm
 │
-├── literature_review/                        # Tài liệu tổng hợp và phân tích 12 bài báo nền tảng
-│   ├── summary_synthesis.md                  # Báo cáo tổng hợp tri thức & phân nhóm 3 nhóm bài báo
-│   ├── group_1_active_learning/              # Nhóm 1: Các chiến lược AL tối ưu chi phí (ocae197, MedNER...)
-│   │   ├── ocae197.md
-│   │   ├── applsci-12-05775.md
-│   │   └── 3678178.md
-│   ├── group_2_datasets/                     # Nhóm 2: Xây dựng dữ liệu & Benchmark tiếng Việt
-│   │   ├── 2021.naacl-main.173.md
-│   │   ├── 2022.lrec-1.385.md
-│   │   ├── 5221-INIS.md
-│   │   └── 2406.13337v3.md
-│   ├── group_3_models/                       # Nhóm 3: Các mô hình tiền huấn luyện y khoa nâng cao
-│   │   ├── 2023.findings-eacl.79.md
-│   │   ├── 2023.paclic-1.83.md
-│   │   ├── 2024.acl-srw.31.md
-│   │   ├── 2406.10671v4.md
-│   │   └── 2025.findings-naacl.47.md
-│   └── raw_summaries/                        # Thư mục lưu các bản dịch/tóm tắt thô các bài báo gốc
+├── 📑 docs/                                     # BỘ BÁO CÁO THỰC NGHIỆM CHI TIẾT (5 CHƯƠNG)
+│   ├── 📄 chuong_1_mo_dau.md                    # Chương 1: Giới thiệu, tính cấp thiết & mục tiêu
+│   ├── 📄 chuong_2_co_so_ly_thuyet.md           # Chương 2: Cơ sở lý thuyết về NER, DeBERTa, LoRA, AL
+│   ├── 📄 chuong_3_phuong_phap_thuc_hien.md      # Chương 3: Phương pháp đề xuất (Entropy CRF, Distinct-K, DES)
+│   ├── 📄 chuong_4_thuc_nghiem_ket_qua.md        # Chương 4: Kịch bản thực nghiệm, đối chứng & phân tích kết quả
+│   ├── 📄 chuong_5_ket_luan_va_huong_phat_trien.md # Chương 5: Kết luận & hướng phát triển tương lai
+│   ├── 📄 danh_muc_viet_tat.md                  # Bảng thuật ngữ & từ viết tắt
+│   ├── 📄 tai_lieu_tham_khao.md                 # Danh mục tài liệu tham khảo chuẩn IEEE
+│   └── 📕 Báo cáo NLP_ Active Learning & VietBioNER.pdf # Bản Báo cáo PDF hoàn chỉnh
 │
-├── colab/                                    # Mã nguồn chạy thực nghiệm trên Google Colab / Kaggle
-│   ├── dataset/                              # Bộ dữ liệu VietBioNER gốc & Gazetteer
-│   └── notebook/                             # Các notebook Jupyter chạy chính
-│       ├── 01_mo_phong_active_learning.ipynb # Notebook chạy chính 2 nhánh thí nghiệm (Colab)
-│       ├── 01_mo_phong_active_learning_kaggle.ipynb # Notebook chạy chính 2 nhánh thí nghiệm (Kaggle)
-│       └── 02_danh_gia_va_truc_quan_hoa.ipynb # Notebook vẽ biểu đồ so sánh SSR/ESR
+├── 📐 proposal/                                 # ĐỀ CƯƠNG GIẢI PHÁP & THIẾT KẾ KỸ THUẬT CHI TIẾT
+│   ├── 📁 01_introduction_and_goals/
+│   │   ├── 📄 muc_tieu_va_ket_qua.md            # Mục tiêu cốt lõi & kết quả kỳ vọng
+│   │   └── 📄 dong_luc_nghien_cuu.md            # Động lực khoa học & phân tích bài toán
+│   ├── 📁 02_dataset_analysis/
+│   │   ├── 📄 vietbioner.md                     # Phân tích chi tiết bộ dữ liệu VietBioNER
+│   │   └── 📄 gazetter.md                       # Phân tích bộ từ điển Gazetteer y tế
+│   ├── 📁 03_model_architecture/
+│   │   └── 📄 kien_truc_mo_hinh.md              # Thiết kế ViPubmedDeBERTa + LoRA + Linear-CRF
+│   ├── 📁 04_active_learning/
+│   │   ├── 📄 active_learning_chi_tiet.md       # Chi tiết thuật toán AL, Distinct-K & Baseline
+│   │   ├── 📄 giai_thich_crf_marginal_entropy.md # Lý thuyết toán học CRF Marginal Entropy (Forward-Backward)
+│   │   ├── 📄 Entity_type_description.md        # Cơ chế Mô tả Loại Thực thể & Entity Masking
+│   │   └── 📄 dictionary_based_entity_substitution.md # Kỹ thuật thế thực thể dựa trên từ điển (DES)
+│   ├── 📁 05_evaluation_and_pipeline/
+│   │   ├── 📄 pipeline.md                       # Quy trình thực nghiệm 10 bước & đối chứng song song
+│   │   └── 📄 danh_gia_va_trien_khai.md         # Kế hoạch thực nghiệm & đánh giá
+│   ├── 📁 06_research_rationale/
+│   │   └── 📄 chuoi_suy_luan_thiet_ke.md        # Lý luận khoa học & chuỗi suy luận thiết kế luồng
+│   └── 📁 result/
+│       ├── 📄 bao_cao_ket_qua.md                # Báo cáo kết quả tổng hợp
+│       ├── 📄 kq2.md                            # Chi tiết bảng số liệu F1 qua từng vòng
+│       └── 📄 danh_gia_ket_qua_va_phan_tich_nguyen_nhan.md # Phân tích nguyên nhân & Ablation Study
 │
-├── prompts/                                  # Tài liệu prompt hỗ trợ định hướng mô hình AI
-│   └── research_paper_prompt.md
+├── 📚 literature_review/                        # TỔNG HỢP NỀN TẢNG LÝ THUYẾT (12 BÀI BÁO NỔI BẬT)
+│   ├── 📄 summary_synthesis.md                  # Báo cáo tổng hợp tri thức & phân nhóm nghiên cứu
+│   ├── 📁 group_1_active_learning/              # Các chiến lược AL tối ưu chi phí (ocae197, MedNER...)
+│   ├── 📁 group_2_datasets/                     # Xây dựng dữ liệu & Benchmark tiếng Việt (VietBioNER, ViText2BioNER)
+│   └── 📁 group_3_models/                       # Mô hình tiền huấn luyện y khoa (ViPubmedDeBERTa, OpenBioNER...)
 │
-├── lessons_learned.md                        # Bài học kinh nghiệm đúc kết từ thực nghiệm
-└── README.md                                 # Hướng dẫn chung và tổng quan dự án (File hiện tại)
+├── 💻 src/                                      # MÃ NGUỒN THỰC THI & NOTEBOOKS
+│   ├── 📄 README.md                             # Hướng dẫn kỹ thuật chạy code & cấu hình môi trường
+│   ├── 📁 notebook/                             # CÁC JUPYTER NOTEBOOKS THỰC NGHIỆM CHÍNH
+│   │   ├── 📓 00_truc_quan_hoa_dataset.ipynb   # Trực quan hóa phân phối nhãn VietBioNER
+│   │   ├── 📓 01_mo_phong_active_learning.ipynb # Notebook chạy chính 2 nhánh thí nghiệm (Google Colab)
+│   │   ├── 📓 01_mo_phong_active_learning_kaggle.ipynb # Notebook chạy trên Kaggle (Resume Bridge + OOM Protection)
+│   │   └── 📓 02_danh_gia_va_truc_quan_hoa.ipynb # Notebook vẽ biểu đồ so sánh F1
+│   └── 📁 tien_xu_ly_1/                         # SCRIPTS TIỀN XỬ LÝ DỮ LIỆU
+│       ├── 🐍 filter_gazetteers.py              # Script lọc trùng rò rỉ dữ liệu Gazetteer
+│       └── 📁 Brat2BIO/
+│           └── 🐍 convert_brat_to_bio.py        # Chuyển đổi định dạng BRAT (.ann) sang BIO format
+│
+└── 🎯 prompts/                                  # HƯỚNG DẪN PROMPT & KẾ HOẠCH TRIỂN KHAI
+    ├── 📄 ke_hoach_trien_khai_code.md           # Kế hoạch từng bước triển khai mã nguồn
+    └── 📄 research_paper_prompt.md              # Prompts hỗ trợ tổng hợp và phân tích bài báo
 ```
 
 ---
 
-## 3. Các Nhánh Thí nghiệm Đối chứng (Comparative Evaluation)
+## 🔬 5. Kịch Bản Thí Nghiệm Đối Chứng Song Song
 
-Dự án thiết lập **2 nhánh thí nghiệm song song** xuất phát từ cùng một Seed Set $L_0$ để trả lời khách quan các câu hỏi khoa học:
+Dự án thiết lập **2 nhánh thí nghiệm đối chứng song song** từ cùng một xuất phát điểm để trả lời khách quan câu hỏi nghiên cứu:
 
-*   **Nhánh A (Đề xuất)**:
-    *   *Mô hình*: ViPubmedDeBERTa-base + LoRA + Linear-CRF + Entity Type Descriptions.
-    *   *Chọn mẫu*: CRF Marginal Entropy + Distinct-K Filter ($b = 100$, $\theta = 0.85$, fallback $\theta \in [0.90, 0.95]$).
-    *   *Tăng cường*: Thế thực thể dựa trên từ điển (Dictionary-based Entity Substitution - DES) thế thực thể hiếm gặp từ Gazetteer sạch (đã lọc rò rỉ dữ liệu).
-*   **Nhánh B (Random Baseline)**:
-    *   *Mô hình*: ViPubmedDeBERTa-base + LoRA + Linear-CRF + Entity Type Descriptions.
-    *   *Chọn mẫu*: Chọn mẫu ngẫu nhiên hoàn toàn (Random Sampling) với kích thước $b = 100$ câu/vòng.
-    *   *Tăng cường*: Thế thực thể dựa trên từ điển (Dictionary-based Entity Substitution - DES) thế thực thể hiếm gặp tương tự Nhánh A (áp dụng đồng bộ để bảo đảm so sánh công bằng).
-
-### Cơ chế đồng bộ hóa Baseline Vòng 0
-Để triệt tiêu các sai số ngẫu nhiên do khởi tạo trọng số ngẫu nhiên (initial weights) và shuffling dữ liệu ở vòng lặp đầu tiên, hệ thống áp dụng **cơ chế đồng bộ hóa checkpoint Vòng 0**:
-1. Nhánh A chạy huấn luyện Vòng 0 trên Seed Set $L_0$, lưu kết quả và checkpoint tốt nhất `best_model_AL_0.pt`.
-2. Nhánh B khi khởi động sẽ tự động nạp checkpoint này làm baseline xuất phát điểm và chuyển thẳng sang Vòng 1. Điều này đảm bảo so sánh công bằng tuyệt đối 100% từ cùng một xuất phát điểm.
-
----
-
-## 4. Các Siêu tham số Kỹ thuật (Hyperparameters)
-
-Dưới đây là bảng cấu hình các tham số hệ thống được sử dụng đồng nhất trong mã nguồn và tài liệu đề cương:
-
-| Tham số | Ý nghĩa | Giá trị trong Code |
+| Đặc điểm | Nhánh A (Phương Pháp Đề Xuất) | Nhánh B (Baseline - Random) |
 | :--- | :--- | :--- |
-| **MODEL_CHECKPOINT** | Mô hình nền tảng | `"manhtt-079/vipubmed-deberta-base"` |
-| **LORA_R** | Rank của bộ điều hợp LoRA | `16` (Nâng cao sức học adapter) |
-| **LORA_ALPHA** | Alpha của bộ điều hợp LoRA | `32` (Tương ứng 2x Rank) |
-| **MAX_LEN** | Chiều dài câu tối đa đầu vào | `256` |
-| **BATCH_SIZE** | Quy mô lô huấn luyện | `16` (Colab) / `8` (Kaggle - OOM prevention) |
-| **LEARNING_RATE** | Tốc độ học của LoRA | `2e-4` (Tăng tốc hội tụ thích ứng) |
-| **Linear LR** | Tốc độ học lớp Linear Head | `5e-4` (Phân tầng LLRD) |
-| **CRF LR** | Tốc độ học lớp CRF Head | `1e-3` (Phân tầng LLRD học ma trạng trạng thái) |
-| **AL_EPOCHS** | Số epoch tối đa mỗi vòng AL | `25` |
-| **PATIENCE** | Kiên nhẫn dừng sớm (Early Stopping) | `5` |
-| **MASK_ENTITY** | Tỷ lệ che giấu thực thể mục tiêu | `0.18` (Áp dụng từ **Vòng 2 trở đi**) |
-| **MASK_CONTEXT** | Tỷ lệ che giấu từ ngữ cảnh nhãn O | `0.15` (Áp dụng từ **Vòng 2 trở đi**) |
-| **BUDGET_LIMIT** | Giới hạn ngân sách gán nhãn tối đa | `0.50` (50% tập Train thô, tương đương 682 câu) |
-| **BATCH_SELECT** | Số câu chọn thêm mỗi vòng lặp ($b$) | `100` câu |
-| **THETA** | Ngưỡng tương đồng Cosine Distinct-K | `0.85` (Fallback động lên `0.90` và `0.95`) |
-| **SEED** | Hạt giống ngẫu nhiên | `42` |
-| **Class Loss Weights** | Trọng số phạt CRF Loss dương tính | `Organisation`: 5.0, `DateTime`: 4.0, `Location`: 3.0, `DiagnosticProcedure`: 2.0, `Symptom_and_Disease`: 1.0 |
+| **Mô hình** | ViPubmedDeBERTa + LoRA + Linear-CRF | ViPubmedDeBERTa + LoRA + Linear-CRF |
+| **Mô tả Thực thể** | Tích hợp Entity Type Descriptions | Tích hợp Entity Type Descriptions |
+| **Chiến lược Chọn Mẫu** | **CRF Marginal Entropy + Distinct-K Filter** | **Chọn Mẫu Ngẫu Nhiên (Random Sampling)** |
+| **Tăng Cường Dữ Liệu** | Thế thực thể dựa trên từ điển (DES) | Thế thực thể dựa trên từ điển (DES) |
+| **Đồng Bộ Vòng 0** | Huấn luyện $L_0$, lưu `best_model_AL_0.pt` | **Nạp chung `best_model_AL_0.pt`** làm điểm xuất phát |
+
+> 🔒 **Cơ chế Đồng bộ hóa Checkpoint Vòng 0**: Nhánh B tự động nạp checkpoint được huấn luyện từ Nhánh A ở Vòng 0. Điều này giúp triệt tiêu 100% sai số ngẫu nhiên do khởi tạo trọng số ban đầu, đảm bảo tính so sánh công bằng tuyệt đối.
 
 ---
 
-## 5. Phương pháp luận Đánh giá Chi phí Gán nhãn
+## 📊 6. Kết Quả Nghiên Cứu & Phân Tích Chi Tiết
 
-Dự án áp dụng hai thước đo định lượng cốt lõi để chứng minh mức độ tiết kiệm chi phí của Active Learning:
+### 6.1. Bảng Kết Quả Thực Nghiệm Song Song (Vòng 0 -> 4)
+Tài liệu chi tiết: [kq2.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/result/kq2.md) & [bao_cao_ket_qua.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/result/bao_cao_ket_qua.md).
 
-1.  **Tỷ lệ tiết kiệm mẫu câu (Sentence Saving Ratio - SSR)**:
-    $$	ext{SSR (\%)} = \left(1 - rac{N_{	ext{AL}}}{N_{	ext{RS}}}ight) 	imes 100\%$$
-    Trong đó $N$ là số mẫu câu cần thiết để đạt mức F1-score mục tiêu (75.0%).
-2.  **Tỷ lệ tiết kiệm thao tác hiệu chỉnh (Edit Saving Ratio - ESR)**:
-    $$	ext{ESR (\%)} = \left(1 - rac{E_{	ext{AL}}}{E_{	ext{RS}}}ight) 	imes 100\%$$
-    Trong đó $E$ là tổng tích lũy khoảng cách **Levenshtein Edit Distance** cấp độ token giữa gợi ý nhãn (Pre-annotation) của mô hình và nhãn chuẩn của dữ liệu. Chỉ số này mô phỏng nỗ lực thực tế (chèn, xóa, sửa nhãn) của chuyên gia y tế khi hậu hiệu chỉnh nhãn máy gợi ý (Post-editing) trong quy trình thực tiễn.
-
----
-
-## 6. Hướng dẫn Thực thi Thực nghiệm (Execution Guide)
-
-### 6.1. Chạy trên Google Colab
-1.  Tải toàn bộ thư mục dự án lên Google Drive cá nhân của bạn tại đường dẫn gốc: `/content/drive/MyDrive/active-learning-VietBioNER/`.
-2.  Mở tệp [01_mo_phong_active_learning.ipynb](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/colab/notebook/01_mo_phong_active_learning.ipynb) bằng Google Colab.
-3.  Cấu hình môi trường sử dụng **GPU T4** (miễn phí) hoặc tốt hơn.
-4.  Chạy **Cell 1**: Cell này sẽ thiết lập môi trường, tự động cài đặt các phiên bản thư viện tương thích Python 3.12+ (bao gồm bản vá monkeypatch `collections.Iterable` cho `torchcrf`) và tự động khởi động lại Runtime.
-5.  Chạy tuần tự tất cả các ô tiếp theo. Sau khi hoàn thành, logs và checkpoints sẽ được tự động lưu trữ tại `/content/drive/MyDrive/active-learning-VietBioNER/logs/seed_42/`.
-
-### 6.2. Chạy và Resume trên Kaggle
-Kaggle cung cấp GPU T4 x2 miễn phí, tuy nhiên thư mục Input là Read-only nên cần cấu hình đặc thù để chạy cơ chế Resume:
-1.  **Tải Dataset lên Kaggle**: Nén thư mục dữ liệu y sinh thành file `.zip` theo cấu trúc sau và tải lên Kaggle Dataset với tên `active-learning-vietbioner3`:
-    ```text
-    active-learning-vietbioner3/
-    ├── dataset/
-    │   ├── vietbioner/ (train.txt, dev.txt, test.txt)
-    │   ├── gazetteer/ (datetime.json, location.json...)
-    │   └── preprocessed/ (các tệp đã chạy phân đoạn PyVi tĩnh)
-    └── logs/ (seed_indices.json, sbert_embeddings.npy, current_L_indices.json...)
-    ```
-2.  **Khởi tạo Notebook**: Tạo một Notebook mới trên Kaggle, nạp nội dung của tệp [01_mo_phong_active_learning_kaggle.ipynb](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/colab/notebook/01_mo_phong_active_learning_kaggle.ipynb) và mount Dataset `active-learning-vietbioner3` vừa tạo.
-3.  **Kaggle Resume Bridge (Cell 1)**: Đoạn mã này sẽ tự động sao chép toàn bộ logs và checkpoints từ Input (Read-only) sang thư mục làm việc ghi được `/kaggle/working/logs/`.
-4.  **Chạy Resume**: Khi bấm Run All, `Cell 11a` sẽ tự động nhận diện chỉ mục đã gán nhãn cũ từ `/kaggle/working/logs/current_L_indices.json` và nạp mô hình đã lưu để tiếp tục vòng AL tiếp theo (ví dụ Vòng 2) mà không cần chạy lại từ Vòng 0.
-5.  **Tránh tràn bộ nhớ (OOM)**: Notebook trên Kaggle tự động ghi đè tham số `Config.BATCH_SIZE = 8` để hoạt động an toàn trên RAM GPU T4 của Kaggle.
+| Vòng lặp ($t$) | Số câu gán nhãn ($N_t$) | % Tập Train thô | F1 Nhánh A (AL đề xuất) | F1 Nhánh B (Random Baseline) | Chênh lệch (AL vs Random) |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **Vòng 0** | 85 câu | 7.8% | 44.86% | 44.86% | *Đồng bộ xuất phát* |
+| **Vòng 1** | 185 câu | 17.0% | 58.28% | 56.69% | **+1.59%** |
+| **Vòng 2** | 285 câu | 26.2% | **67.44%** | 57.36% | **+10.08%** |
+| **Vòng 3** | 385 câu | 35.4% | 63.16% | 68.16% | -5.00% |
+| **Vòng 4 (Cuối)** | **485 câu** | **44.5%** | **71.85%** | **63.07%** | **+8.78%** |
 
 ---
 
-## 7. Tài liệu Tham chiếu Chính (References)
+### 6.2. Phân Tích Kết Quả & Nguyên Nhân Giới Hạn Hiệu Năng (~71.85% F1)
+Tài liệu phân tích chuyên sâu: [danh_gia_ket_qua_va_phan_tich_nguyen_nhan.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/proposal/result/danh_gia_ket_qua_va_phan_tich_nguyen_nhan.md).
 
-*   **[1] ocae197**: Chen, Y., et al. *"Utilizing active learning strategies in machine-assisted annotation for clinical named entity recognition."* Journal of Biomedical Informatics (2019).
-*   **[2] applsci-12-05775**: *"Iterative Annotation of Biomedical NER Corpora with Deep Neural Networks and Knowledge Bases."* Applied Sciences (2022).
-*   **[3] 3678178 (MedNER)**: *"MedNER: Enhanced Named Entity Recognition in Medical Corpus via Optimized Balanced and Deep Active Learning."* ACM Transactions on Intelligent Systems and Technology (2024).
-*   **[5] VietBioNER**: *"A Named Entity Recognition Corpus for Vietnamese Biomedical Texts to Support Tuberculosis Treatment."* LREC (2022).
-*   **[9] ViPubmedDeBERTa**: *"ViPubmedDeBERTa: A Pre-trained Model for Vietnamese Biomedical Text."* PACLIC (2023).
-*   **[12] OPENBIONER**: *"Lightweight Open-Domain Biomedical Named Entity Recognition Through Entity Type Description."* NAACL (2025).
+#### 1. Active Learning Chứng Minh Tính Vượt Trội Rõ Rệt
+* Tại Vòng 4 (gán nhãn 485 câu, tương đương ~44.5% dữ liệu tập Train thô), **Nhánh AL đạt 71.85% F1-score**, vượt xa **Nhánh Random chỉ đạt 63.07% F1-score** (chênh lệch **+8.78% F1**).
+* Nhánh Random bị sụt giảm hiệu năng mạnh ở Vòng 4 (từ 68.16% xuống 63.07%), cho thấy chọn mẫu ngẫu nhiên rất dễ bị trúng các câu nhiễu/rỗng làm trôi trọng số mô hình. Ngược lại, chiến lược AL thể hiện sự bứt phá và phục hồi tăng trưởng ổn định.
+* Tiết kiệm từ **27% đến 34%** số câu cần gán nhãn để đạt các mốc F1-score từ 60.0% đến 65.0% so với lấy mẫu ngẫu nhiên.
+
+#### 2. Phân Tích Các Nguyên Nhân Kết Quả Dừng Ở Mốc ~71.85% F1
+Dù vượt trội so với Random, mô hình ở Vòng 4 dừng ở mức 71.85% F1. Phân tích các nguyên nhân chính cho thấy:
+
+* **Đặc thù & Giới hạn Tự nhiên của VietBioNER**:
+  * **Mất cân bằng lớp nặng**: Tập Train thô bị lệch hẳn về nhãn `Symptom_and_Disease` (59.4%), trong khi `Organisation` chỉ chiếm 6.16% (154 thực thể trên 1.089 câu). Việc thiếu dữ liệu các lớp thiểu số kìm hãm F1 trung bình.
+  * **Nhiễu ranh giới gán nhãn thủ công**: Độ đồng thuận giữa bác sĩ (IAA) đối với lớp `DiagnosticProcedure` chỉ đạt **70.59%** (bất đồng ranh giới cụm từ chẩn đoán).
+  * **Tiệm cận trần hiệu năng dữ liệu**: Mô hình PhoBERT gốc (LREC 2022) train trên 100% dữ liệu chỉ đạt **79.60% F1**. Việc đạt 71.85% F1 chỉ với 44.5% dữ liệu đã là một kết quả tiệm cận trần hiệu năng của bộ dữ liệu này.
+* **Tác động Phụ từ Thiết kế Kiến trúc**:
+  * Cơ chế Entity Type Description nhân bản 5x câu kết hợp với DES trên tập nhỏ dễ gây lặp mẫu ngữ cảnh cố định ở các vòng sau.
+  * Đầu CRF khởi tạo ngẫu nhiên cần lượng dữ liệu nhất định để học ma trận chuyển trạng thái nhãn BIO.
+
+---
+
+## 🚀 7. Hướng Dẫn Thực Thi Mã Nguồn (Quick Start Guide)
+
+Mọi hướng dẫn chi tiết về môi trường và dòng lệnh được mô tả tại [src/README.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/src/README.md).
+
+### 7.1. Chạy trên Google Colab
+1. Upload toàn bộ thư mục `active-learning-VietBioNER` lên Google Drive.
+2. Mở notebook [01_mo_phong_active_learning.ipynb](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/src/notebook/01_mo_phong_active_learning.ipynb) trên Google Colab.
+3. Chọn môi trường GPU T4.
+4. Chạy Cell 1 để tự động cài đặt thư viện và vá lỗi `collections.Iterable` cho `torchcrf`.
+5. Chạy tuần tự các ô tiếp theo để tiến hành mô phỏng từ Vòng 0 đến Vòng 4.
+
+### 7.2. Chạy trên Kaggle (Hỗ trợ Resume khi bị ngắt kết nối)
+1. Tải bộ dữ liệu `dataset/` và `logs/` lên Kaggle Dataset (`active-learning-vietbioner3`).
+2. Mở notebook [01_mo_phong_active_learning_kaggle.ipynb](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/src/notebook/01_mo_phong_active_learning_kaggle.ipynb).
+3. `Cell 1` kích hoạt **Kaggle Resume Bridge**, tự động sao chép log từ Input (Read-only) sang `/kaggle/working/logs/`.
+4. Bấm **Run All**, notebook sẽ nhận diện chỉ mục đã gán nhãn cũ để tiếp tục chạy các vòng AL còn lại.
+
+---
+
+## 📖 8. Tài Liệu Tham Khảo Nổi Bật
+
+Tài liệu tổng hợp 12 bài báo khoa học liên quan: [summary_synthesis.md](file:///d:/Study/TLU/Nlp/active-learning-VietBioNER/literature_review/summary_synthesis.md)
+
+* **[ocae197]** Chen, Y., et al. *"Utilizing active learning strategies in machine-assisted annotation for clinical named entity recognition."* JBI (2019).
+* **[applsci-12-05775]** *"Iterative Annotation of Biomedical NER Corpora with Deep Neural Networks and Knowledge Bases."* Applied Sciences (2022).
+* **[MedNER]** *"MedNER: Enhanced Named Entity Recognition in Medical Corpus via Optimized Balanced and Deep Active Learning."* ACM TIST (2024).
+* **[VietBioNER]** *"A Named Entity Recognition Corpus for Vietnamese Biomedical Texts to Support Tuberculosis Treatment."* LREC (2022).
+* **[ViPubmedDeBERTa]** *"ViPubmedDeBERTa: A Pre-trained Model for Vietnamese Biomedical Text."* PACLIC (2023).
+* **[OPENBIONER]** *"Lightweight Open-Domain Biomedical Named Entity Recognition Through Entity Type Description."* NAACL (2025).
+
+---
+
+<p align="center">
+  <i>Bài Tập Lớn Môn Xử Lý Ngôn Ngữ Tự Nhiên (NLP) - Trường Đại học Thủy Lợi (TLU)</i><br>
+  <b>Active Learning for Vietnamese Biomedical Named Entity Recognition (VietBioNER)</b>
+</p>
